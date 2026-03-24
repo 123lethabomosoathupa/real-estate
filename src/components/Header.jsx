@@ -3,10 +3,10 @@
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function Header() {
+function HeaderContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -35,7 +35,6 @@ export default function Header() {
   return (
     <header className='bg-gray-700 shadow-md'>
       <div className='flex justify-between items-center max-w-6xl mx-auto p-4'>
-        {/* Logo */}
         <Link href='/'>
           <h1 className='font-bold text-sm sm:text-xl flex flex-wrap'>
             <span className='text-gray-300'>Sahand</span>
@@ -43,7 +42,6 @@ export default function Header() {
           </h1>
         </Link>
 
-        {/* Search */}
         <form className='bg-gray-600 p-2 rounded-lg flex items-center gap-2' onSubmit={handleSubmit}>
           <input
             type='text'
@@ -57,35 +55,24 @@ export default function Header() {
           </button>
         </form>
 
-        {/* Nav links */}
         <ul className='flex gap-5 items-center'>
           {session && (
             <Link href='/dashboard'>
-              <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>
-                Dashboard
-              </li>
+              <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>Dashboard</li>
             </Link>
           )}
           <Link href='/'>
-            <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>
-              Home
-            </li>
+            <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>Home</li>
           </Link>
           <Link href='/about'>
-            <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>
-              About
-            </li>
+            <li className='hidden md:inline text-gray-300 hover:text-white transition-colors text-sm'>About</li>
           </Link>
           {session && (
-            <Link
-              href='/create-listing'
-              className='hidden md:flex items-center gap-1.5 bg-gray-500 hover:bg-gray-400 text-white text-sm px-3 py-1.5 rounded-lg transition-colors'
-            >
+            <Link href='/create-listing' className='hidden md:flex items-center gap-1.5 bg-gray-500 hover:bg-gray-400 text-white text-sm px-3 py-1.5 rounded-lg transition-colors'>
               <FaPlus className='text-xs' />
               Create Listing
             </Link>
           )}
-
           {session ? (
             <div className='relative' onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setMenuOpen(!menuOpen)}>
@@ -99,17 +86,10 @@ export default function Header() {
                     <p className='text-xs font-semibold text-gray-700 truncate'>{session.user?.name}</p>
                     <p className='text-xs text-gray-400 truncate'>{session.user?.email}</p>
                   </div>
-                  <Link href='/dashboard' className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors' onClick={() => setMenuOpen(false)}>
-                    My Listings
-                  </Link>
-                  <Link href='/create-listing' className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors md:hidden' onClick={() => setMenuOpen(false)}>
-                    Create Listing
-                  </Link>
+                  <Link href='/dashboard' className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors' onClick={() => setMenuOpen(false)}>My Listings</Link>
+                  <Link href='/create-listing' className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors md:hidden' onClick={() => setMenuOpen(false)}>Create Listing</Link>
                   <div className='border-t border-gray-100 mt-1'>
-                    <button
-                      onClick={() => { setMenuOpen(false); signOut({ callbackUrl: '/' }); }}
-                      className='block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors'
-                    >
+                    <button onClick={() => { setMenuOpen(false); signOut({ callbackUrl: '/' }); }} className='block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors'>
                       Sign Out
                     </button>
                   </div>
@@ -124,5 +104,19 @@ export default function Header() {
         </ul>
       </div>
     </header>
+  );
+}
+
+export default function Header() {
+  return (
+    <Suspense fallback={
+      <header className='bg-gray-700 shadow-md'>
+        <div className='flex justify-between items-center max-w-6xl mx-auto p-4'>
+          <h1 className='font-bold text-xl text-white'>SahandEstate</h1>
+        </div>
+      </header>
+    }>
+      <HeaderContent />
+    </Suspense>
   );
 }

@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import ListingItem from '../../components/ListingItem';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function Search() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sidebardata, setSidebardata] = useState({ searchTerm: '', type: 'all', parking: false, furnished: false, offer: false, sort: 'created_at', order: 'desc' });
@@ -25,7 +25,19 @@ export default function Search() {
     const fetchListings = async () => {
       setLoading(true);
       setShowMore(false);
-      const res = await fetch('/api/listing/get', { method: 'POST', body: JSON.stringify({ searchTerm: urlParams.get('searchTerm') || '', type: urlParams.get('type') || 'all', parking: urlParams.get('parking') === 'true', furnished: urlParams.get('furnished') === 'true', offer: urlParams.get('offer') === 'true', sort: urlParams.get('sort') || 'created_at', order: urlParams.get('order') || 'desc' }), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch('/api/listing/get', {
+        method: 'POST',
+        body: JSON.stringify({
+          searchTerm: urlParams.get('searchTerm') || '',
+          type: urlParams.get('type') || 'all',
+          parking: urlParams.get('parking') === 'true',
+          furnished: urlParams.get('furnished') === 'true',
+          offer: urlParams.get('offer') === 'true',
+          sort: urlParams.get('sort') || 'created_at',
+          order: urlParams.get('order') || 'desc',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
       const data = await res.json();
       setShowMore(data.length > 8);
       setListings(data);
@@ -57,7 +69,6 @@ export default function Search() {
 
   return (
     <div className='flex flex-col md:flex-row min-h-screen bg-gray-100'>
-      {/* Sidebar */}
       <div className='p-6 bg-white border-b md:border-b-0 md:border-r border-gray-200 md:min-h-screen md:w-72 shrink-0'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
           <div>
@@ -69,12 +80,12 @@ export default function Search() {
             <div className='flex flex-col gap-2'>
               {[['all', 'Rent & Sale'], ['rent', 'Rent'], ['sale', 'Sale']].map(([id, label]) => (
                 <label key={id} className='flex items-center gap-2 text-sm text-gray-600 cursor-pointer'>
-                  <input type='checkbox' id={id} className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata.type === id} />
+                  <input type='checkbox' id={id} className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata.type === id} readOnly />
                   {label}
                 </label>
               ))}
               <label className='flex items-center gap-2 text-sm text-gray-600 cursor-pointer'>
-                <input type='checkbox' id='offer' className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata.offer} />
+                <input type='checkbox' id='offer' className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata.offer} readOnly />
                 Offer
               </label>
             </div>
@@ -84,7 +95,7 @@ export default function Search() {
             <div className='flex flex-col gap-2'>
               {[['parking', 'Parking'], ['furnished', 'Furnished']].map(([id, label]) => (
                 <label key={id} className='flex items-center gap-2 text-sm text-gray-600 cursor-pointer'>
-                  <input type='checkbox' id={id} className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata[id]} />
+                  <input type='checkbox' id={id} className='w-4 h-4 accent-gray-600' onChange={handleChange} checked={sidebardata[id]} readOnly />
                   {label}
                 </label>
               ))}
@@ -102,8 +113,6 @@ export default function Search() {
           <button className='bg-gray-700 text-white p-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors'>Search</button>
         </form>
       </div>
-
-      {/* Results */}
       <div className='flex-1 p-6'>
         <h1 className='text-xl font-semibold text-gray-700 mb-6 pb-3 border-b border-gray-200'>Listing results</h1>
         <div className='flex flex-wrap gap-4'>
@@ -111,12 +120,18 @@ export default function Search() {
           {loading && <p className='text-gray-500 w-full text-center'>Loading...</p>}
           {!loading && listings.map((listing) => <ListingItem key={listing._id} listing={listing} />)}
           {showMore && (
-            <button onClick={onShowMoreClick} className='text-gray-600 hover:text-gray-800 hover:underline p-4 text-center w-full text-sm'>
-              Show more
-            </button>
+            <button onClick={onShowMoreClick} className='text-gray-600 hover:text-gray-800 hover:underline p-4 text-center w-full text-sm'>Show more</button>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Search() {
+  return (
+    <Suspense fallback={<div className='min-h-screen bg-gray-100 flex items-center justify-center'><p className='text-gray-500'>Loading...</p></div>}>
+      <SearchContent />
+    </Suspense>
   );
 }
