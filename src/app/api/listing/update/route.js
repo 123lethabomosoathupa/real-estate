@@ -14,10 +14,12 @@ export const POST = async (req) => {
 
     const listing = await Listing.findById(data.listingId);
     if (!listing) {
-      return new Response('Listing not found', { status: 404 });
+      return new Response(JSON.stringify({ error: 'Listing not found' }), { status: 404 });
     }
-    if (listing.userRef !== session.user.id) {
-      return new Response('Unauthorized', { status: 401 });
+
+    // Compare as strings
+    if (listing.userRef.toString() !== session.user.id.toString()) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403 });
     }
 
     const updated = await Listing.findByIdAndUpdate(
@@ -42,7 +44,7 @@ export const POST = async (req) => {
     );
     return new Response(JSON.stringify(updated), { status: 200 });
   } catch (error) {
-    console.log('Error updating listing:', error);
-    return new Response('Error updating listing', { status: 500 });
+    console.error('Error updating listing:', error);
+    return new Response(JSON.stringify({ error: 'Error updating listing' }), { status: 500 });
   }
 };

@@ -6,7 +6,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 export const POST = async (req) => {
   const session = await getServerSession(authOptions);
   if (!session) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
   try {
     await connect();
@@ -16,20 +16,19 @@ export const POST = async (req) => {
       name: data.name,
       description: data.description,
       address: data.address,
-      regularPrice: data.regularPrice,
-      discountPrice: data.discountPrice,
-      bathrooms: data.bathrooms,
-      bedrooms: data.bedrooms,
+      regularPrice: Number(data.regularPrice),
+      discountPrice: Number(data.discountPrice) || 0,
+      bathrooms: Number(data.bathrooms),
+      bedrooms: Number(data.bedrooms),
       furnished: data.furnished,
       parking: data.parking,
       type: data.type,
       offer: data.offer,
       imageUrls: data.imageUrls,
     });
-    await newListing.save();
     return new Response(JSON.stringify(newListing), { status: 200 });
   } catch (error) {
-    console.log('Error creating listing:', error);
-    return new Response('Error creating listing', { status: 500 });
+    console.error('Error creating listing:', error);
+    return new Response(JSON.stringify({ error: 'Error creating listing' }), { status: 500 });
   }
 };

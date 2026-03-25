@@ -1,12 +1,12 @@
 import Listing from '@/lib/models/listing.model';
 import { connect } from '@/lib/mongodb/mongoose';
+import mongoose from 'mongoose';
 
 export const POST = async (req) => {
   await connect();
   const data = await req.json();
   try {
     const startIndex = parseInt(data.startIndex) || 0;
-    // Higher limit when fetching by userId (dashboard) so all listings show
     const limit = data.userId ? 100 : (parseInt(data.limit) || 9);
     const sortDirection = data.order === 'asc' ? 1 : -1;
 
@@ -22,20 +22,38 @@ export const POST = async (req) => {
     let type = data.type;
     if (type === undefined || type === 'all') type = { $in: ['sale', 'rent'] };
 
-    const listings = await Listing.find({
-      ...(data.userId && { userRef: data.userId }),
-      ...(data.listingId && { _id: data.listingId }),
-      ...(data.searchTerm && {
-        $or: [
-          { name: { $regex: data.searchTerm, $options: 'i' } },
-          { description: { $regex: data.searchTerm, $options: 'i' } },
-        ],
-      }),
+    // Build the filter object
+    const filter = {
       offer,
       furnished,
       parking,
       type,
-    })
+    };
+
+    // Handle listingId — cast to ObjectId safely
+    if (data.listingId) {
+      try {
+        filter._id = new mongoose.Types.ObjectId(data.listingId);
+      } catch {
+        return new Response(JSON.stringify([]), { status: 200 });
+      }
+    }
+
+    // Filter by owner
+    if (data.userId) {
+      filter.userRef = data.userId;
+    }
+
+    // Search term across name and description
+    if (data.searchTerm) {
+      filter.$or = [
+        { name: { $regex: data.searchTerm, $options: 'i' } },
+        { description: { $regex: data.searchTerm, $options: 'i' } },
+        { address: { $regex: data.searchTerm, $options: 'i' } },
+      ];
+    }
+
+    const listings = await Listing.find(filter)
       .sort({ updatedAt: sortDirection })
       .skip(startIndex)
       .limit(limit);

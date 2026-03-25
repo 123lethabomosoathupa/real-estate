@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
-import ListingItem from '../../components/ListingItem';
+import ListingItem from '@/components/ListingItem';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function SearchContent() {
@@ -27,15 +27,7 @@ function SearchContent() {
       setShowMore(false);
       const res = await fetch('/api/listing/get', {
         method: 'POST',
-        body: JSON.stringify({
-          searchTerm: urlParams.get('searchTerm') || '',
-          type: urlParams.get('type') || 'all',
-          parking: urlParams.get('parking') === 'true',
-          furnished: urlParams.get('furnished') === 'true',
-          offer: urlParams.get('offer') === 'true',
-          sort: urlParams.get('sort') || 'created_at',
-          order: urlParams.get('order') || 'desc',
-        }),
+        body: JSON.stringify({ searchTerm: urlParams.get('searchTerm') || '', type: urlParams.get('type') || 'all', parking: urlParams.get('parking') === 'true', furnished: urlParams.get('furnished') === 'true', offer: urlParams.get('offer') === 'true', sort: urlParams.get('sort') || 'created_at', order: urlParams.get('order') || 'desc' }),
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
@@ -73,7 +65,7 @@ function SearchContent() {
         <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
           <div>
             <label className='block text-sm font-medium text-gray-600 mb-1'>Search Term</label>
-            <input type='text' id='searchTerm' placeholder='Search...' className='border border-gray-300 rounded-lg p-2 w-full text-sm' value={sidebardata.searchTerm} onChange={handleChange} />
+            <input type='text' id='searchTerm' placeholder='Search...' className='border border-gray-300 rounded-lg p-2 w-full text-sm text-gray-800 bg-white' value={sidebardata.searchTerm} onChange={handleChange} />
           </div>
           <div>
             <label className='block text-sm font-medium text-gray-600 mb-2'>Type</label>
@@ -103,7 +95,7 @@ function SearchContent() {
           </div>
           <div>
             <label className='block text-sm font-medium text-gray-600 mb-1'>Sort</label>
-            <select onChange={handleChange} defaultValue='createdAt_desc' id='sort_order' className='border border-gray-300 rounded-lg p-2 w-full text-sm'>
+            <select onChange={handleChange} defaultValue='createdAt_desc' id='sort_order' className='border border-gray-300 rounded-lg p-2 w-full text-sm text-gray-800 bg-white'>
               <option value='regularPrice_desc'>Price high to low</option>
               <option value='regularPrice_asc'>Price low to high</option>
               <option value='createdAt_desc'>Latest</option>
@@ -119,9 +111,7 @@ function SearchContent() {
           {!loading && listings.length === 0 && <p className='text-gray-500'>No listings found.</p>}
           {loading && <p className='text-gray-500 w-full text-center'>Loading...</p>}
           {!loading && listings.map((listing) => <ListingItem key={listing._id} listing={listing} />)}
-          {showMore && (
-            <button onClick={onShowMoreClick} className='text-gray-600 hover:text-gray-800 hover:underline p-4 text-center w-full text-sm'>Show more</button>
-          )}
+          {showMore && (<button onClick={onShowMoreClick} className='text-gray-600 hover:text-gray-800 hover:underline p-4 text-center w-full text-sm'>Show more</button>)}
         </div>
       </div>
     </div>

@@ -1,13 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 export default function UpdateListing() {
   const { data: session, status } = useSession();
   const [files, setFiles] = useState([]);
-  const pathname = usePathname();
-  const listingId = pathname.split('/').pop();
+  const params = useParams();
+  const listingId = params.id;
   const [formData, setFormData] = useState({
     imageUrls: [], name: '', description: '', address: '',
     type: 'rent', bedrooms: 1, bathrooms: 1, regularPrice: 50,
@@ -20,6 +20,7 @@ export default function UpdateListing() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!listingId) return;
     const fetchListing = async () => {
       const res = await fetch('/api/listing/get', {
         method: 'POST',
@@ -27,11 +28,11 @@ export default function UpdateListing() {
         body: JSON.stringify({ listingId }),
       });
       const data = await res.json();
-      if (data.success === false) { console.log(data.message); return; }
+      if (!Array.isArray(data) || data.length === 0) { console.log('Listing not found'); return; }
       setFormData(data[0]);
     };
     fetchListing();
-  }, []);
+  }, [listingId]);
 
   const handleImageSubmit = async (e) => {
     e.preventDefault();
@@ -90,45 +91,45 @@ export default function UpdateListing() {
     }
   };
 
-  if (status === 'loading') return <h1 className='text-center text-xl my-7 font-semibold'>Loading...</h1>;
-  if (!session) return <h1 className='text-center text-xl my-7 font-semibold'>You must be signed in. <a href='/sign-in' className='text-blue-600 underline'>Sign in</a></h1>;
+  if (status === 'loading') return <h1 className='text-center text-xl my-7 font-semibold text-gray-700'>Loading...</h1>;
+  if (!session) return <h1 className='text-center text-xl my-7 font-semibold text-gray-700'>You must be signed in. <a href='/sign-in' className='text-blue-600 underline'>Sign in</a></h1>;
 
   return (
     <main className='p-3 max-w-4xl mx-auto'>
-      <h1 className='text-3xl font-semibold text-center my-7'>Update a Listing</h1>
+      <h1 className='text-3xl font-semibold text-center my-7 text-gray-700'>Update Listing</h1>
       <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-4'>
         <div className='flex flex-col gap-4 flex-1'>
-          <input type='text' placeholder='Name' className='border p-3 rounded-lg' id='name' maxLength='62' minLength='10' required onChange={handleChange} value={formData.name} />
-          <textarea placeholder='Description' className='border p-3 rounded-lg' id='description' required onChange={handleChange} value={formData.description} />
-          <input type='text' placeholder='Address' className='border p-3 rounded-lg' id='address' required onChange={handleChange} value={formData.address} />
+          <input type='text' placeholder='Name' className='border border-gray-300 p-3 rounded-lg text-gray-800 bg-white' id='name' maxLength='62' minLength='10' required onChange={handleChange} value={formData.name} />
+          <textarea placeholder='Description' className='border border-gray-300 p-3 rounded-lg text-gray-800 bg-white' id='description' required onChange={handleChange} value={formData.description} />
+          <input type='text' placeholder='Address' className='border border-gray-300 p-3 rounded-lg text-gray-800 bg-white' id='address' required onChange={handleChange} value={formData.address} />
           <div className='flex gap-6 flex-wrap'>
-            <div className='flex gap-2'><input type='checkbox' id='sale' className='w-5' onChange={handleChange} checked={formData.type === 'sale'} /><span>Sell</span></div>
-            <div className='flex gap-2'><input type='checkbox' id='rent' className='w-5' onChange={handleChange} checked={formData.type === 'rent'} /><span>Rent</span></div>
-            <div className='flex gap-2'><input type='checkbox' id='parking' className='w-5' onChange={handleChange} checked={formData.parking} /><span>Parking spot</span></div>
-            <div className='flex gap-2'><input type='checkbox' id='furnished' className='w-5' onChange={handleChange} checked={formData.furnished} /><span>Furnished</span></div>
-            <div className='flex gap-2'><input type='checkbox' id='offer' className='w-5' onChange={handleChange} checked={formData.offer} /><span>Offer</span></div>
+            <div className='flex gap-2'><input type='checkbox' id='sale' className='w-5' onChange={handleChange} checked={formData.type === 'sale'} /><span className='text-gray-700'>Sell</span></div>
+            <div className='flex gap-2'><input type='checkbox' id='rent' className='w-5' onChange={handleChange} checked={formData.type === 'rent'} /><span className='text-gray-700'>Rent</span></div>
+            <div className='flex gap-2'><input type='checkbox' id='parking' className='w-5' onChange={handleChange} checked={formData.parking} /><span className='text-gray-700'>Parking spot</span></div>
+            <div className='flex gap-2'><input type='checkbox' id='furnished' className='w-5' onChange={handleChange} checked={formData.furnished} /><span className='text-gray-700'>Furnished</span></div>
+            <div className='flex gap-2'><input type='checkbox' id='offer' className='w-5' onChange={handleChange} checked={formData.offer} /><span className='text-gray-700'>Offer</span></div>
           </div>
           <div className='flex flex-wrap gap-6'>
-            <div className='flex items-center gap-2'><input type='number' id='bedrooms' min='1' max='10' required className='p-3 border border-gray-300 rounded-lg' onChange={handleChange} value={formData.bedrooms} /><p>Beds</p></div>
-            <div className='flex items-center gap-2'><input type='number' id='bathrooms' min='1' max='10' required className='p-3 border border-gray-300 rounded-lg' onChange={handleChange} value={formData.bathrooms} /><p>Baths</p></div>
-            <div className='flex items-center gap-2'><input type='number' id='regularPrice' min='50' max='10000000' required className='p-3 border border-gray-300 rounded-lg' onChange={handleChange} value={formData.regularPrice} /><div className='flex flex-col items-center'><p>Regular price</p><span className='text-xs'>( R / month)</span></div></div>
-            {formData.offer && (<div className='flex items-center gap-2'><input type='number' id='discountPrice' min='0' max='10000000' required className='p-3 border border-gray-300 rounded-lg' onChange={handleChange} value={formData.discountPrice} /><div className='flex flex-col items-center'><p>Discounted price</p><span className='text-xs'>( R / month)</span></div></div>)}
+            <div className='flex items-center gap-2'><input type='number' id='bedrooms' min='1' max='10' required className='p-3 border border-gray-300 rounded-lg text-gray-800 bg-white w-20' onChange={handleChange} value={formData.bedrooms} /><p className='text-gray-700'>Beds</p></div>
+            <div className='flex items-center gap-2'><input type='number' id='bathrooms' min='1' max='10' required className='p-3 border border-gray-300 rounded-lg text-gray-800 bg-white w-20' onChange={handleChange} value={formData.bathrooms} /><p className='text-gray-700'>Baths</p></div>
+            <div className='flex items-center gap-2'><input type='number' id='regularPrice' min='50' max='10000000' required className='p-3 border border-gray-300 rounded-lg text-gray-800 bg-white w-32' onChange={handleChange} value={formData.regularPrice} /><div className='flex flex-col items-center'><p className='text-gray-700'>Regular price</p><span className='text-xs text-gray-500'>( R / month)</span></div></div>
+            {formData.offer && (<div className='flex items-center gap-2'><input type='number' id='discountPrice' min='0' max='10000000' required className='p-3 border border-gray-300 rounded-lg text-gray-800 bg-white w-32' onChange={handleChange} value={formData.discountPrice} /><div className='flex flex-col items-center'><p className='text-gray-700'>Discounted price</p><span className='text-xs text-gray-500'>( R / month)</span></div></div>)}
           </div>
         </div>
         <div className='flex flex-col flex-1 gap-4'>
-          <p className='font-semibold'>Images:<span className='font-normal text-gray-600 ml-2'>The first image will be the cover (max 6)</span></p>
+          <p className='font-semibold text-gray-700'>Images:<span className='font-normal text-gray-500 ml-2'>The first image will be the cover (max 6)</span></p>
           <div className='flex gap-4'>
-            <input onChange={(e) => setFiles(e.target.files)} className='p-3 border border-gray-300 rounded w-full' type='file' id='images' accept='image/*' multiple />
+            <input onChange={(e) => setFiles(e.target.files)} className='p-3 border border-gray-300 rounded w-full text-gray-700 bg-white' type='file' id='images' accept='image/*' multiple />
             <button type='button' disabled={uploading} onClick={handleImageSubmit} className='p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80'>{uploading ? 'Uploading...' : 'Upload'}</button>
           </div>
           {imageUploadError && <p className='text-red-700 text-sm'>{imageUploadError}</p>}
           {formData.imageUrls.map((url, index) => (
-            <div key={url} className='flex justify-between p-3 border items-center'>
+            <div key={url} className='flex justify-between p-3 border border-gray-200 items-center rounded-lg'>
               <img src={url} alt='listing image' className='w-20 h-20 object-contain rounded-lg' />
               <button type='button' onClick={() => handleRemoveImage(index)} className='p-3 text-red-700 rounded-lg uppercase hover:opacity-75'>Delete</button>
             </div>
           ))}
-          <button disabled={loading || uploading} className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Updating...' : 'Update listing'}</button>
+          <button disabled={loading || uploading} className='p-3 bg-gray-700 text-white rounded-lg uppercase hover:bg-gray-600 disabled:opacity-80'>{loading ? 'Updating...' : 'Update Listing'}</button>
           {error && <p className='text-red-700 text-sm'>{error}</p>}
         </div>
       </form>

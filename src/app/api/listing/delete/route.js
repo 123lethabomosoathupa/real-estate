@@ -16,8 +16,10 @@ export const POST = async (req) => {
     if (!listing) {
       return new Response(JSON.stringify({ error: 'Listing not found' }), { status: 404 });
     }
-    if (listing.userRef !== session.user.id) {
-      return new Response(JSON.stringify({ error: 'Unauthorized — you do not own this listing' }), { status: 401 });
+
+    // Compare as strings — userRef is stored as a string, session.user.id is also a string
+    if (listing.userRef.toString() !== session.user.id.toString()) {
+      return new Response(JSON.stringify({ error: 'Unauthorized — you do not own this listing' }), { status: 403 });
     }
 
     await Listing.findByIdAndDelete(listingId);
